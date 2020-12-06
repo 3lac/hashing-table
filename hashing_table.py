@@ -3,8 +3,37 @@
 class HashTable:
     def __init__(self):
         self.size = 11
+        #  slots hold the key
         self.slots = [None]*self.size
+        #  data holds the corresponding values
         self.data = [None]*self.size
+
+    #  returns the number of items in hashtable
+    def __len__(self):
+        length = 0
+        for i in range(len(self.slots)):
+            if self.slots[i] is not None:
+                length = length + 1
+        return length
+
+    #  returns True if key is in hashtable, otherwise False
+    def __contains__(self, item):
+        hashvalue = self.hashfunction(item)
+        starting_hash = hashvalue
+        stop = False
+        found = False
+        while (self.slots[hashvalue] != None
+                and not found
+                and not stop):
+            if self.slots[hashvalue] == item:
+                found = True
+            else:
+                hashvalue = self.rehash(hashvalue)
+                if hashvalue == starting_hash:
+                    stop = True
+        return found
+
+
 
     def put(self, key, value):
         starting_hash = self.hashfunction(key)
@@ -20,7 +49,7 @@ class HashTable:
                 rehashed_value = self.rehash(starting_hash)
                 while self.slots[rehashed_value] != key and \
                                 self.slots[rehashed_value] != None:
-                    rehashed_value = self.rehash(key)
+                    rehashed_value = self.rehash(rehashed_value)
                 #  When an empty slot is found, fill in key and value
                 if self.slots[rehashed_value] == None:
                     self.slots[rehashed_value] = key
@@ -55,7 +84,7 @@ class HashTable:
 
     #  Rehash using linear probing +1
     def rehash(self, oldhash):
-        return (oldhash+ 1) % self.size
+        return (oldhash + 1) % self.size
 
     #  Fills in the corresponding key and value
     def __setitem__(self, key, value):
@@ -65,4 +94,15 @@ class HashTable:
     def __getitem__(self, key):
         return self.get(key)
 
+def test():
 
+    h = HashTable()
+    h[50] = 'dog'
+    #  key 60, 5, and 16 map to the same slot
+    h[60] = 'cat'
+    h[5] = 'panda'
+    h[16] = 'lion'
+    print(h.slots)
+    print(len(h))
+
+test()
