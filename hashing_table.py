@@ -153,7 +153,6 @@ def test():
         del h[i]
         print(h.slots)
     print(h.slots)
-    print(len(h))
     print(len(h.slots))
 
 test()
