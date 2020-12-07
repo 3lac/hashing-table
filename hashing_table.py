@@ -33,9 +33,50 @@ class HashTable:
                     stop = True
         return found
 
+    #  deletes the key and associated value from hash table
+    def __delitem__(self, key):
+        if self.__len__()/self.size <0.5:
+            self.resize('decrease')
+        starting_hash = self.hashfunction(key)
+        hash_value = starting_hash
+        stop = False
+        while (self.slots[hash_value] != key
+                and not stop):
+            hash_value = self.rehash(hash_value)
+            if starting_hash == hash_value:
+                stop = True
+        if not stop and self.slots[hash_value] == key:
+            self.slots[hash_value] = None
+            self.data[hash_value] = None
 
+    #  resizes the hashtable according to if change is 'increase' or 'decrease'
+    def resize(self, change):
+        current_size = self.size
+        if change == 'increase':
+            current_size = current_size * 2
+        elif change == 'decrease':
+            current_size = current_size // 2
+        #  find the next prime number to change size to
+        for i in range(current_size + 1, current_size + 4000, 1):
+            is_prime = True
+            for x in [num for num in range(2, i, 1) if num < i/2]:
+                if i % x == 0:
+                    is_prime = False
+            if is_prime:
+                current_size = i
+                break
+        tmp_slot = self.slots
+        tmp_data = self.data
+        self.slots = [None] * current_size
+        self.data = [None] * current_size
+        self.size = current_size
+        for i in range(len(tmp_slot)):
+            if tmp_slot[i] is not None:
+                self.put(tmp_slot[i], tmp_data[i])
 
     def put(self, key, value):
+        if self.__len__()/self.size > 0.5:
+            self.resize('increase')
         starting_hash = self.hashfunction(key)
         #  If key is no present in hashing table
         if self.slots[starting_hash] == None:
@@ -98,11 +139,20 @@ def test():
 
     h = HashTable()
     h[50] = 'dog'
-    #  key 60, 5, and 16 map to the same slot
+    #  key 60, 5, 16, 27, 38, and 49 map to the same slot
     h[60] = 'cat'
     h[5] = 'panda'
     h[16] = 'lion'
+    h[27] = 'bird'
+    h[38] = 'zebra'
+    h[49] = 'horse'
+    for i in range(50):
+        h[i] = i*22
+        print(h.slots)
+    for i in range(50):
+        del h[i]
+        print(h.slots)
     print(h.slots)
-    print(len(h))
+    print(len(h.slots))
 
 test()
