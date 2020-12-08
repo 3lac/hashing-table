@@ -22,27 +22,31 @@ class HashTable:
         starting_hash = hashvalue
         stop = False
         found = False
+        rehash_i = 1
         while (self.slots[hashvalue] != None
                 and not found
                 and not stop):
             if self.slots[hashvalue] == item:
                 found = True
             else:
-                hashvalue = self.rehash(hashvalue)
+                hashvalue = self.rehash(hashvalue, rehash_i)
+                rehash_i = rehash_i + 1
                 if hashvalue == starting_hash:
                     stop = True
         return found
 
     #  deletes the key and associated value from hash table
     def __delitem__(self, key):
-        if self.__len__()/self.size <0.5:
+        if (self.__len__()-1)/self.size <0.5:
             self.resize('decrease')
         starting_hash = self.hashfunction(key)
         hash_value = starting_hash
         stop = False
+        rehash_i = 1
         while (self.slots[hash_value] != key
                 and not stop):
-            hash_value = self.rehash(hash_value)
+            hash_value = self.rehash(hash_value, rehash_i)
+            rehash_i = rehash_i + 1
             if starting_hash == hash_value:
                 stop = True
         if not stop and self.slots[hash_value] == key:
@@ -75,7 +79,7 @@ class HashTable:
                 self.put(tmp_slot[i], tmp_data[i])
 
     def put(self, key, value):
-        if self.__len__()/self.size > 0.5:
+        if (self.__len__()+1)/self.size > 0.5:
             self.resize('increase')
         starting_hash = self.hashfunction(key)
         #  If key is no present in hashing table
@@ -87,10 +91,13 @@ class HashTable:
             if self.slots[starting_hash] == key:
                 self.data[starting_hash] = value
             else:
-                rehashed_value = self.rehash(starting_hash)
+                rehash_i = 1
+                rehashed_value = self.rehash(starting_hash, rehash_i)
                 while self.slots[rehashed_value] != key and \
                                 self.slots[rehashed_value] != None:
-                    rehashed_value = self.rehash(rehashed_value)
+                    rehash_i = rehash_i + 1
+                    print(rehash_i)
+                    rehashed_value = self.rehash(rehashed_value, rehash_i)
                 #  When an empty slot is found, fill in key and value
                 if self.slots[rehashed_value] == None:
                     self.slots[rehashed_value] = key
@@ -105,6 +112,7 @@ class HashTable:
         stop = False
         data = None
         position = start_position
+        rehash_i = 1
         while self.slots[position] != None and \
                         not found and not stop:
             #  Key found, set data equal to the stored value
@@ -113,7 +121,8 @@ class HashTable:
                 found = True
             else:
                 #  Rehash value and stop when program has iterated through entire table
-                position = self.rehash(position)
+                position = self.rehash(position, rehash_i)
+                rehash_i = rehash_i + 1
                 if position == start_position:
                     stop = True
 
@@ -124,8 +133,16 @@ class HashTable:
         return key % self.size
 
     #  Rehash using linear probing +1
-    def rehash(self, oldhash):
-        return (oldhash + 1) % self.size
+    def rehash(self, oldhash, rehash_i):
+        #  alternates the rehash_i to ensure that every slot is visited
+        if rehash_i % 2 == 0:
+            rehash_i = rehash_i ** 2
+            rehash_i = -rehash_i
+        else:
+            rehash_i = rehash_i ** 2
+
+        print(f'rehash value {self.slots[(oldhash + rehash_i)%self.size]}')
+        return (oldhash + rehash_i) % self.size
 
     #  Fills in the corresponding key and value
     def __setitem__(self, key, value):
@@ -138,7 +155,6 @@ class HashTable:
 def test():
 
     h = HashTable()
-    h[50] = 'dog'
     #  key 60, 5, 16, 27, 38, and 49 map to the same slot
     h[60] = 'cat'
     h[5] = 'panda'
@@ -146,13 +162,9 @@ def test():
     h[27] = 'bird'
     h[38] = 'zebra'
     h[49] = 'horse'
-    for i in range(50):
-        h[i] = i*22
-        print(h.slots)
-    for i in range(50):
-        del h[i]
-        print(h.slots)
+    print(49 in h)
     print(h.slots)
+    print(h.data)
     print(len(h.slots))
 
 test()
